@@ -1,13 +1,9 @@
 package com.example.demo.controller;
 
-import com.example.demo.config.UserJwtAuthenticationToken;
-import com.example.demo.dto.req.RefreshRequest;
-import com.example.demo.dto.req.UserRequest;
-import com.example.demo.dto.res.TokenResponse;
-import com.example.demo.dto.res.UserDetailResponse;
-import com.example.demo.dto.res.UserResponse;
+import com.example.demo.config.security.UserJwtAuthenticationToken;
+import com.example.demo.dto.AuthDto.*;
 import com.example.demo.model.UserAccount;
-import com.example.demo.service.TokenService;
+import com.example.demo.service.SessionService;
 import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
+/** Registration, login and sessions. */
 @RestController
 @RequestMapping("api/vi/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationManager authenticationManager;
-    private final TokenService tokenService;
+    private final SessionService sessionService;
     private final UserService userService;
 
     @PostMapping("/register")
@@ -35,13 +32,12 @@ public class AuthController {
     public TokenResponse login(@Valid @RequestBody UserRequest request) {
         var authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
-        return tokenService.login((UserAccount) authentication.getPrincipal());
+        return sessionService.login((UserAccount) authentication.getPrincipal());
     }
 
-    /** Needs no access token, so it works after the access token has expired. */
     @PostMapping("/refresh")
     public TokenResponse refresh(@Valid @RequestBody RefreshRequest request) {
-        return tokenService.refresh(request.refreshToken());
+        return sessionService.refresh(request.refreshToken());
     }
 
     @GetMapping("/me")
@@ -52,12 +48,12 @@ public class AuthController {
     @PostMapping("/logout")
     @ResponseStatus(NO_CONTENT)
     public void logout(UserJwtAuthenticationToken authentication) {
-        tokenService.logout(authentication.getCredentials());
+        sessionService.logout(authentication.getCredentials());
     }
 
     @PostMapping("/logout-all")
     @ResponseStatus(NO_CONTENT)
     public void logoutAll(@AuthenticationPrincipal UserAccount user) {
-        tokenService.logoutAll(user.getId());
+        sessionService.logoutAll(user.getId());
     }
 }

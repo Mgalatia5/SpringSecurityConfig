@@ -44,7 +44,6 @@ public class UserAccount implements UserDetails {
     @Builder.Default
     private Set<Post> likedPosts = new HashSet<>();
 
-    /** "ROLE_&lt;name&gt;" for each enabled role, plus the name of each enabled permission it grants. */
     @Override
     public Set<GrantedAuthority> getAuthorities() {
         return userRoles.stream()

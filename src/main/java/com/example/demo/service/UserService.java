@@ -1,12 +1,10 @@
 package com.example.demo.service;
 
-import com.example.demo.dao.PostRepository;
-import com.example.demo.dao.UserRepository;
-import com.example.demo.dto.req.UserRequest;
-import com.example.demo.dto.res.UserDetailResponse;
-import com.example.demo.dto.res.UserResponse;
+import com.example.demo.dao.AuthRepositories.UserRepository;
+import com.example.demo.dto.AuthDto.UserDetailResponse;
+import com.example.demo.dto.AuthDto.UserRequest;
+import com.example.demo.dto.AuthDto.UserResponse;
 import com.example.demo.exception.ApiException;
-import com.example.demo.model.Post;
 import com.example.demo.model.Role;
 import com.example.demo.model.UserAccount;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +18,13 @@ import java.util.Set;
 import static com.example.demo.exception.ApiException.notFound;
 import static org.springframework.http.HttpStatus.CONFLICT;
 
+/**
+ * User accounts and their roles.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository users;
-    private final PostRepository posts;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
@@ -33,7 +33,9 @@ public class UserService {
         return users.findAll().stream().map(UserDetailResponse::from).toList();
     }
 
-    /** New users get the default role only. */
+    /**
+     * New users get the default role only.
+     */
     @Transactional
     public UserResponse createUser(UserRequest request) {
         if (users.existsByUsername(request.username())) {
@@ -51,17 +53,5 @@ public class UserService {
         UserAccount user = users.findById(userId).orElseThrow(notFound("User", userId));
         user.setUserRoles(roleService.findRoles(roleNames));
         return UserDetailResponse.from(user);
-    }
-
-    /** Likes or unlikes the post. Doing it twice has no extra effect. */
-    @Transactional
-    public void setLiked(Long userId, Long postId, boolean liked) {
-        UserAccount user = users.findById(userId).orElseThrow(notFound("User", userId));
-        Post post = posts.findById(postId).orElseThrow(notFound("Post", postId));
-        if (liked) {
-            user.getLikedPosts().add(post);
-        } else {
-            user.getLikedPosts().remove(post);
-        }
     }
 }

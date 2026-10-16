@@ -1,9 +1,7 @@
-package com.example.demo.config;
+package com.example.demo.config.security;
 
-import com.example.demo.dao.UserRepository;
+import com.example.demo.dao.AuthRepositories.UserRepository;
 import com.example.demo.model.UserAccount;
-import com.example.demo.service.TokenService;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,22 +17,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
@@ -43,7 +32,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {"/api/vi/auth/register", "/api/vi/auth/login", "/api/vi/auth/refresh"};
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService users, TokenService tokens,
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService users, SessionValidator sessions,
                                             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver)
             throws Exception {
         // Errors raised in the security filters get the same JSON body as every other error
@@ -52,7 +41,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
@@ -62,7 +51,7 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(deniedHandler)
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(token -> authenticate(token, users, tokens))))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(token -> authenticate(token, users, sessions))))
                 .build();
     }
 
@@ -70,8 +59,9 @@ public class SecurityConfig {
      * The token only identifies the user and session. Session, account status, roles and permissions
      * are checked against the database on every request, so changes take effect immediately.
      */
-    private static UserJwtAuthenticationToken authenticate(Jwt jwt, UserDetailsService users, TokenService tokens) {
-        if (!tokens.isSessionActive(jwt)) {
+    private static UserJwtAuthenticationToken authenticate(Jwt jwt,
+                                                           UserDetailsService users, SessionValidator sessions) {
+        if (!sessions.isSessionActive(jwt)) {
             throw new InvalidBearerTokenException("this session has been signed out, log in again");
         }
         UserAccount user = (UserAccount) users.loadUserByUsername(jwt.getSubject());
@@ -97,20 +87,5 @@ public class SecurityConfig {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(users);
         provider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(provider);
-    }
-
-    @Bean
-    SecretKey jwtSecretKey(AppProperties properties) {
-        return new SecretKeySpec(properties.jwt().secret().getBytes(UTF_8), "HmacSHA256");
-    }
-
-    @Bean
-    JwtEncoder jwtEncoder(SecretKey jwtSecretKey) {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSecretKey));
-    }
-
-    @Bean
-    JwtDecoder jwtDecoder(SecretKey jwtSecretKey) {
-        return NimbusJwtDecoder.withSecretKey(jwtSecretKey).macAlgorithm(MacAlgorithm.HS256).build();
     }
 }

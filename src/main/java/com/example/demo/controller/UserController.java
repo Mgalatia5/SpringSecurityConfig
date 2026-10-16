@@ -1,10 +1,11 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.req.UserRequest;
-import com.example.demo.dto.req.UserRolesRequest;
-import com.example.demo.dto.res.UserDetailResponse;
-import com.example.demo.dto.res.UserResponse;
+import com.example.demo.dto.AuthDto.UserDetailResponse;
+import com.example.demo.dto.AuthDto.UserRequest;
+import com.example.demo.dto.AuthDto.UserResponse;
+import com.example.demo.dto.AuthDto.UserRolesRequest;
 import com.example.demo.model.UserAccount;
+import com.example.demo.service.PostService;
 import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,13 @@ import java.util.List;
 
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
+/** User accounts, their roles and their likes. */
 @RestController
 @RequestMapping("api/vi/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final PostService postService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('user:read')")
@@ -45,14 +48,14 @@ public class UserController {
     @PreAuthorize("hasAuthority('post:like')")
     @ResponseStatus(NO_CONTENT)
     public void likePost(@PathVariable Long userId, @PathVariable Long postId, @AuthenticationPrincipal UserAccount user) {
-        userService.setLiked(self(userId, user), postId, true);
+        postService.setLiked(self(userId, user), postId, true);
     }
 
     @DeleteMapping("/{userId}/likes/{postId}")
     @PreAuthorize("hasAuthority('post:like')")
     @ResponseStatus(NO_CONTENT)
     public void unlikePost(@PathVariable Long userId, @PathVariable Long postId, @AuthenticationPrincipal UserAccount user) {
-        userService.setLiked(self(userId, user), postId, false);
+        postService.setLiked(self(userId, user), postId, false);
     }
 
     /** Likes can only be changed for yourself. */

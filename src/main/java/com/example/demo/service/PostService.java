@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dao.PostRepository;
-import com.example.demo.dao.UserRepository;
+import com.example.demo.dao.AuthRepositories.UserRepository;
 import com.example.demo.dto.req.PostRequest;
 import com.example.demo.dto.res.PostResponse;
 import com.example.demo.model.Post;
@@ -44,5 +44,19 @@ public class PostService {
         }
         post.getLikedByUsers().forEach(user -> user.getLikedPosts().remove(post));   // likes are owned by UserAccount
         posts.delete(post);
+    }
+
+    /**
+     * Likes or unlikes the post. Doing it twice has no extra effect.
+     */
+    @Transactional
+    public void setLiked(Long userId, Long postId, boolean liked) {
+        UserAccount user = users.findById(userId).orElseThrow(notFound("User", userId));
+        Post post = posts.findById(postId).orElseThrow(notFound("Post", postId));
+        if (liked) {
+            user.getLikedPosts().add(post);
+        } else {
+            user.getLikedPosts().remove(post);
+        }
     }
 }

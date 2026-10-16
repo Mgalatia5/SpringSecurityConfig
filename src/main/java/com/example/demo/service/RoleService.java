@@ -1,10 +1,10 @@
 package com.example.demo.service;
 
-import com.example.demo.dao.PermissionRepository;
-import com.example.demo.dao.RoleRepository;
-import com.example.demo.dto.req.RoleRequest;
-import com.example.demo.dto.res.PermissionResponse;
-import com.example.demo.dto.res.RoleResponse;
+import com.example.demo.dao.AuthRepositories.PermissionRepository;
+import com.example.demo.dao.AuthRepositories.RoleRepository;
+import com.example.demo.dto.AuthDto.PermissionResponse;
+import com.example.demo.dto.AuthDto.RoleRequest;
+import com.example.demo.dto.AuthDto.RoleResponse;
 import com.example.demo.exception.ApiException;
 import com.example.demo.model.Permission;
 import com.example.demo.model.Role;
@@ -23,6 +23,9 @@ import static com.example.demo.exception.ApiException.notFound;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 
+/**
+ * Roles and the permissions they grant.
+ */
 @Service
 @RequiredArgsConstructor
 public class RoleService {
@@ -56,7 +59,10 @@ public class RoleService {
         return RoleResponse.from(role);
     }
 
-    /** The roles with these names; 400 if any name is unknown. */
+    /**
+     * The roles with these names; 400 if any name is unknown.
+     */
+    @Transactional(readOnly = true)
     public Set<Role> findRoles(Set<String> names) {
         return requireAll("roles", names, roles.findByRoleNameIn(names), Role::getRoleName, roles::findAll);
     }
@@ -66,7 +72,9 @@ public class RoleService {
                 Permission::getPermissionName, permissions::findAll);
     }
 
-    /** Returns {@code found} if it covers every name, else a 400 listing the unknown and the available names. */
+    /**
+     * Returns {@code found} if it covers every name, else a 400 listing the unknown and the available names.
+     */
     private static <T> Set<T> requireAll(String kind, Set<String> names, List<T> found,
                                          Function<T, String> nameOf, Supplier<List<T>> all) {
         Set<String> unknown = new TreeSet<>(names);

@@ -10,7 +10,10 @@ spring:
     password: ${DB_PASSWORD:admin1234}
   jpa:
     open-in-view: false
-    show-sql: ${SHOW_SQL:false}
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        format_sql: ${FORMAT_SQL:true}
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
 

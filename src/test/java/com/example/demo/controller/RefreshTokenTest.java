@@ -1,8 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.IntegrationTestSupport;
-import com.example.demo.dao.RefreshTokenRepository;
-import com.example.demo.dao.UserRepository;
+import com.example.demo.dao.AuthRepositories.RefreshTokenRepository;
+import com.example.demo.dao.AuthRepositories.UserRepository;
 import com.example.demo.model.UserAccount;
 import com.example.demo.service.TokenService;
 import com.jayway.jsonpath.JsonPath;

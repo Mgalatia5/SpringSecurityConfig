@@ -1,5 +1,6 @@
 package com.example.demo.dto.res;
 
+import com.example.demo.dto.AuthDto.UserResponse;
 import com.example.demo.model.Post;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.req.RolePermissionsRequest;
-import com.example.demo.dto.req.RoleRequest;
-import com.example.demo.dto.res.PermissionResponse;
-import com.example.demo.dto.res.RoleResponse;
+import com.example.demo.dto.AuthDto.PermissionResponse;
+import com.example.demo.dto.AuthDto.RolePermissionsRequest;
+import com.example.demo.dto.AuthDto.RoleRequest;
+import com.example.demo.dto.AuthDto.RoleResponse;
 import com.example.demo.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** Roles and the permissions they grant. */
 @RestController
 @RequestMapping("api/vi/role")
 @RequiredArgsConstructor

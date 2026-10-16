@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.IntegrationTestSupport;
-import com.example.demo.dao.UserRepository;
+import com.example.demo.dao.AuthRepositories.UserRepository;
 import com.example.demo.model.UserAccount;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
